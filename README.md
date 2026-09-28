@@ -58,7 +58,7 @@ TRIAGE_MODEL=claude-haiku-4-5-20251001
 
 **Run**
 ```bash
-python3 email1/outputs/run_triage.py
+python3 email1/tests/run_triage.py
 ```
 
 Expected: 40/40 clean passes, ~$0.069 per run, ~50s total.

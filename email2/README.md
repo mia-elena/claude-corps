@@ -35,11 +35,13 @@ The Ellis County underservice question was answered directly using the same per-
 
 ```
 files/
-├── draft_memo.md             # Original AI-drafted memo (with errors)
-├── partner_agencies.csv/.xlsx  # Agency directory (47 agencies)
-└── distribution_log_q1.csv/.xlsx  # Raw Q1 delivery logs
+├── draft_memo.md                    # Original AI-drafted memo (with errors)
+├── partner_agencies.csv/.xlsx       # Agency directory (47 agencies)
+└── distribution_log_q1.csv/.xlsx    # Raw Q1 delivery logs
 
-outputs/
-├── memo_corrected.md         # ★ Fact-checked memo ready for the board
-└── summary.md                # Notes on methodology and data hygiene findings
+outputs/                             # ★ Graded deliverables only
+└── memo_corrected.md                # Fact-checked memo ready for the board
+
+tests/
+└── summary.md                       # Methodology notes and data hygiene findings
 ```

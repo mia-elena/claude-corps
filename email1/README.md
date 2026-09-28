@@ -23,7 +23,7 @@ The new prompt enforces a single JSON output per email with four fields — `cat
 - Inline disambiguation preventing food-adjacent spam from misclassifying as corporate donations
 
 ### Live testing
-A Python script (`run_triage.py`) calls Claude Haiku once per email from `inbox_sample.csv`, validates category/urgency/routing against expected labels, and checks drafts for hallucination phrases. Four iteration cycles:
+A Python script (`tests/run_triage.py`) calls Claude Haiku once per email from `inbox_sample.csv`, validates category/urgency/routing against expected labels, and checks drafts for hallucination phrases. Four iteration cycles:
 
 | Run | Passes | Change |
 |---|---|---|
@@ -38,20 +38,22 @@ A Python script (`run_triage.py`) calls Claude Haiku once per email from `inbox_
 
 ```
 files/
-├── inbox_sample.csv      # 40 real-world inbox emails used as test data
-├── failure_examples.md   # 6 wrong outputs from the original prompt, annotated
-├── current_prompt.md     # The original broken prompt
-└── corrections.csv       # Template for re-triaged labels
+├── inbox_sample.csv       # 40 real-world inbox emails used as test data
+├── failure_examples.md    # 6 wrong outputs from the original prompt, annotated
+├── current_prompt.md      # The original broken prompt
+└── corrections.csv        # Template for re-triaged labels
 
-outputs/
-├── triage_prompt.md      # ★ The rewritten system prompt (production-ready)
-├── corrections.csv       # ★ Correct labels for all 6 failure examples
-├── evaluation_note.md    # ★ One-page testing strategy
-├── run_triage.py         # Live API test runner (auto-loads .env)
-├── triage_results.json   # Raw Haiku outputs for all 40 emails (final run)
-├── triage_results.md     # Human-readable results report
-├── tests.md              # Full findings audit and run history
-└── summary.md            # Process walkthrough and repeatable test guide
+outputs/                   # ★ Graded deliverables only
+├── triage_prompt.md       # Rewritten system prompt (production-ready)
+├── evaluation_note.md     # One-page testing strategy
+└── corrections.csv        # Correct labels for all 6 failure examples
+
+tests/                     # Supporting test infrastructure
+├── run_triage.py          # Live API test runner (auto-loads .env)
+├── triage_results.json    # Raw Haiku outputs for all 40 emails (final run)
+├── triage_results.md      # Human-readable results report
+├── tests.md               # Full findings audit and run history
+└── summary.md             # Process walkthrough and repeatable test guide
 ```
 
 ---
@@ -60,8 +62,8 @@ outputs/
 
 ```bash
 pip3 install anthropic python-dotenv
-# fill in ../../.env with your API key and workspace ID
-python3 outputs/run_triage.py
+# fill in .env at repo root with your API key and workspace ID
+python3 tests/run_triage.py
 ```
 
 **Final run stats:** 40/40 passes · 50,103 input tokens · 3,754 output tokens · $0.069 total · 0 hallucinations

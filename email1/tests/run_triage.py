@@ -5,7 +5,7 @@ Writes results to triage_results.json and triage_results.md.
 Usage:
     python3 run_triage.py
 
-Credentials are loaded from ../../.env (repo root).
+Credentials are loaded from ../../../.env (repo root).
 """
 
 import csv
@@ -25,7 +25,7 @@ import anthropic
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 ROOT        = Path(__file__).parent
-PROMPT_FILE = ROOT / "triage_prompt.md"
+PROMPT_FILE = ROOT.parent / "outputs" / "triage_prompt.md"
 CSV_FILE    = ROOT.parent / "files" / "inbox_sample.csv"
 OUT_JSON    = ROOT / "triage_results.json"
 OUT_MD      = ROOT / "triage_results.md"

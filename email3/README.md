@@ -36,19 +36,21 @@ Priya's current manual process takes approximately 45–60 minutes per shift cyc
 
 ```
 files/
-├── handbook.md           # Volunteer operations handbook (context)
-└── index.html            # Priya's original signup page prototype
+├── handbook.md            # Volunteer operations handbook (context)
+└── index.html             # Priya's original signup page prototype
 
 images/
-├── landing.png           # Screenshot of improved signup page
-├── signupmodal.png       # Signup modal detail
-└── confirmation.png      # Confirmation screen
+├── landing.png            # Screenshot of improved signup page
+├── signupmodal.png        # Signup modal detail
+└── confirmation.png       # Confirmation screen
 
-outputs/
-├── architecture.html     # ★ Interactive architecture diagram
-├── architecture.pdf      # Print/share version of the diagram
-├── email_reply.md        # ★ Draft reply to Priya with ROI numbers for Diane
-├── index.html            # ★ Improved volunteer signup page
-├── tests.md              # Requirements audit
-└── summary.md            # Implementation notes
+outputs/                   # ★ Graded deliverables only
+├── architecture.html      # Interactive architecture diagram
+├── email_reply.md         # Draft reply to Priya with ROI numbers for Diane
+└── index.html             # Improved volunteer signup page
+
+tests/
+├── architecture.pdf       # Print/share version of the diagram
+├── tests.md               # Requirements audit
+└── summary.md             # Implementation notes
 ```

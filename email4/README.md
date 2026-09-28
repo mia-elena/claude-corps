@@ -42,13 +42,15 @@ Model: `claude-haiku-4-5-20251001` — $1.00/M input tokens, $5.00/M output toke
 ## Files
 
 ```
-outputs/
-├── reply_to_marcus.md    # ★ Draft reply with cost breakdown and budget recommendation
-└── tests.md              # Arithmetic verification and assumption audit
+outputs/              # ★ Graded deliverables only
+└── reply_to_marcus.md   # Draft reply with cost breakdown and budget recommendation
+
+tests/
+└── tests.md             # Arithmetic verification and assumption audit
 ```
 
 ---
 
 ## Relationship to Email 1
 
-This task has no source files of its own — all inputs come from Email 1. The token counts in `reply_to_marcus.md` are sourced from `email1/outputs/triage_results.json` (the final 40/40 test run). The prompt referenced is `email1/outputs/triage_prompt.md`.
+This task has no source files of its own — all inputs come from Email 1. The token counts in `reply_to_marcus.md` are sourced from `email1/tests/triage_results.json` (the final 40/40 test run). The prompt referenced is `email1/outputs/triage_prompt.md`.
