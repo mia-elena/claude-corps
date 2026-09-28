@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riverbend Volunteer Shift Signup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .header {
+      background: #2d3748;
+      color: white;
+      padding: 32px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .header p {
+      opacity: 0.8;
+    }
+    .shifts {
+      padding: 32px;
+    }
+    .shift-card {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .shift-card:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+    }
+    .shift-info h3 {
+      font-size: 18px;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+    .shift-info p {
+      color: #718096;
+      font-size: 14px;
+    }
+    .spots {
+      background: #edf2f7;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #4a5568;
+      margin-top: 8px;
+      display: inline-block;
+    }
+    .signup-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .signup-btn:hover {
+      background: #5a67d8;
+    }
+    .signup-btn:disabled {
+      background: #cbd5e0;
+      cursor: not-allowed;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.open { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      width: 90%;
+      max-width: 400px;
+    }
+    .modal-content h2 { margin-bottom: 16px; }
+    .modal-content input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+    .modal-actions { display: flex; gap: 12px; }
+    .cancel-btn {
+      flex: 1;
+      background: #edf2f7;
+      color: #4a5568;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🥫 Riverbend Volunteer Shifts</h1>
+      <p>Pick a shift below and we'll see you there!</p>
+    </div>
+    <div class="shifts" id="shifts"></div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>Sign up for <span id="modal-shift"></span></h2>
+      <input type="text" id="name" placeholder="Your name">
+      <input type="email" id="email" placeholder="Email">
+      <input type="tel" id="phone" placeholder="Phone (for reminder text)">
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+        <button class="signup-btn" onclick="submitSignup()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const shifts = [
+      { id: 1, day: "Tuesday", time: "9am – 12pm", location: "Warehouse sort", need: 8, taken: 3 },
+      { id: 2, day: "Tuesday", time: "1pm – 4pm", location: "Warehouse sort", need: 6, taken: 6 },
+      { id: 3, day: "Thursday", time: "9am – 12pm", location: "Warehouse sort", need: 8, taken: 1 },
+      { id: 4, day: "Saturday", time: "8am – 11am", location: "Mobile pantry — Ellis", need: 12, taken: 5 },
+      { id: 5, day: "Saturday", time: "9am – 1pm", location: "Warehouse public drop-off", need: 4, taken: 2 },
+    ];
+
+    let selectedShift = null;
+
+    function render() {
+      document.getElementById('shifts').innerHTML = shifts.map(s => {
+        const full = s.taken >= s.need;
+        return `
+          <div class="shift-card">
+            <div class="shift-info">
+              <h3>${s.day} · ${s.time}</h3>
+              <p>${s.location}</p>
+              <span class="spots">${s.need - s.taken} of ${s.need} spots open</span>
+            </div>
+            <button class="signup-btn" ${full ? 'disabled' : ''} onclick="openModal(${s.id})">
+              ${full ? 'Full' : 'Sign up'}
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    function openModal(id) {
+      selectedShift = shifts.find(s => s.id === id);
+      document.getElementById('modal-shift').textContent = `${selectedShift.day} ${selectedShift.time}`;
+      document.getElementById('modal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+      document.getElementById('name').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('phone').value = '';
+    }
+
+    function submitSignup() {
+      const name = document.getElementById('name').value;
+      if (!name) { alert('Please enter your name'); return; }
+      // TODO: this doesn't actually save anywhere yet!
+      selectedShift.taken += 1;
+      alert(`Thanks ${name}! You're signed up for ${selectedShift.day} ${selectedShift.time}.\n\n(Note: this is just a prototype — your signup isn't saved anywhere yet.)`);
+      closeModal();
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

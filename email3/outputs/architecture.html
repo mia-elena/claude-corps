@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volunteer Confirmation Flow — Architecture</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f1f5f9;
+      padding: 40px 20px;
+    }
+    header {
+      max-width: 960px;
+      margin: 0 auto 24px;
+    }
+    header h1 { font-size: 22px; color: #1e293b; }
+    header p { color: #64748b; font-size: 14px; margin-top: 4px; }
+    .card {
+      max-width: 960px;
+      margin: 0 auto 24px;
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .legend-item {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    .notes { list-style: disc; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Riverbend Food Alliance — Automated Volunteer Confirmation Flow</h1>
+  <p>Replaces manual Google Form → Airtable entry → hand-texts (est. 6 hrs/week, Priya)</p>
+</header>
+
+<div class="card">
+  <h2>End-to-End Architecture</h2>
+  <div class="mermaid">
+flowchart TD
+    classDef existing  fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+    classDef airtable  fill:#fef9c3,stroke:#ca8a04,color:#78350f
+    classDef claude    fill:#ede9fe,stroke:#7c3aed,color:#3b0764
+    classDef sms       fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef slack     fill:#fce7f3,stroke:#db2777,color:#831843
+    classDef cron      fill:#f1f5f9,stroke:#94a3b8,color:#334155
+
+    V["Volunteer\nSignup Page\n(index.html)"]
+    GF["Google Form\n(existing)"]:::existing
+    GS["Google Sheet\n(existing)"]:::existing
+    AS["Google Apps Script\ntrigger on new row"]:::existing
+    AT[("Airtable\nVolunteer Roster\n───────────────\nName · Phone\nRoute · Shift\nStatus")]:::airtable
+
+    V -->|"submits"| GF
+    GF -->|"auto-populates"| GS
+    GS -->|"onFormSubmit trigger"| AS
+    AS -->|"Airtable REST API\ncreate / upsert record"| AT
+
+    AT -->|"new record\nadded"| C1["Claude + MCP\nConfirmation Bot"]:::claude
+    C1 -->|"MCP: Airtable\nread volunteer details"| AT
+    C1 -->|"MCP: Twilio SMS"| SMS1["Instant confirmation\n'You're signed up for\nTuesday 9am! Reply CANCEL\nif plans change.'"]:::sms
+
+    CRON1["Cron\nDay-before 6 PM\n(Thu for Fri/Sat;\nMon for Tue)"]:::cron --> C2["Claude + MCP\nReminder Bot"]:::claude
+    C2 -->|"MCP: Airtable\nfetch next-day confirmed roster"| AT
+    C2 -->|"MCP: Twilio SMS\nbulk send"| SMS2["Day-before reminder\nto each confirmed volunteer\n(personalized: shift + location)"]:::sms
+
+    SMS2 -->|"volunteer replies CANCEL"| TWH["Twilio Webhook"]:::sms
+    TWH --> C3["Claude + MCP\nCancellation Handler"]:::claude
+    C3 -->|"MCP: Airtable\nmark status to Cancelled"| AT
+    C3 -->|"MCP: Slack"| SL1["#volunteers\nCancellation alert\n+ spot re-opened notice"]:::slack
+
+    CRON2["Cron\nEvery Monday 8 AM"]:::cron --> C4["Claude + MCP\nReport Bot"]:::claude
+    C4 -->|"MCP: Airtable\nprev-week rollup"| AT
+    C4 -->|"MCP: Slack"| SL2["#volunteers\nWeekly Success Report\n───────────────\nShifts filled · No-shows\nCancellations · Top shifts"]:::slack
+  </div>
+
+  <div class="legend">
+    <span class="legend-item" style="background:#dbeafe;color:#1e3a8a;">Existing Google tools</span>
+    <span class="legend-item" style="background:#fef9c3;color:#78350f;">Airtable (source of truth)</span>
+    <span class="legend-item" style="background:#ede9fe;color:#3b0764;">Claude + MCP layer</span>
+    <span class="legend-item" style="background:#dcfce7;color:#14532d;">SMS via Twilio</span>
+    <span class="legend-item" style="background:#fce7f3;color:#831843;">Slack notifications</span>
+    <span class="legend-item" style="background:#f1f5f9;color:#334155;">Scheduled triggers (cron)</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>MCP Servers Required</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;">
+    <thead>
+      <tr style="background:#f8fafc;">
+        <th style="text-align:left;padding:10px 12px;border-bottom:2px solid #e2e8f0;color:#475569;">MCP Server</th>
+        <th style="text-align:left;padding:10px 12px;border-bottom:2px solid #e2e8f0;color:#475569;">Used By</th>
+        <th style="text-align:left;padding:10px 12px;border-bottom:2px solid #e2e8f0;color:#475569;">Operations</th>
+        <th style="text-align:left;padding:10px 12px;border-bottom:2px solid #e2e8f0;color:#475569;">SaaS Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-weight:600;">Airtable MCP</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;">All 4 Claude bots</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;">Read/write volunteer roster; weekly rollup query</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;color:#16a34a;">Existing — Airtable API key from Marcus</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;font-weight:600;">Twilio SMS MCP</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;">Confirmation, Reminder, Cancellation bots</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;">Send outbound SMS; receive CANCEL webhooks</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f1f5f9;color:#dc2626;font-weight:600;">New SaaS — requires Diane sign-off<br><span style="font-weight:400;color:#64748b;">~$0.0075/msg · est. &lt;$20/yr at current volume</span></td>
+      </tr>
+      <tr>
+        <td style="padding:10px 12px;font-weight:600;">Slack MCP</td>
+        <td style="padding:10px 12px;">Cancellation + Report bots</td>
+        <td style="padding:10px 12px;">Post to #volunteers channel</td>
+        <td style="padding:10px 12px;color:#16a34a;">Existing — Slack already in use</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Design Notes</h2>
+  <ul class="notes">
+    <li><strong>Google Form stays as the intake surface</strong> — no change for volunteers signing up; Apps Script bridges it to Airtable automatically, replacing Priya's manual entry step.</li>
+    <li><strong>Airtable remains the single source of truth</strong> for Name, Phone, Route, Shift, and Status — not the Sheet. The Sheet becomes a transient staging layer only.</li>
+    <li><strong>Claude's role is generation + routing</strong>, not storage. It personalizes confirmation and reminder message text (e.g., includes correct shift time, location, cancellation instruction) and decides when to alert Slack. MCP servers handle all I/O.</li>
+    <li><strong>No-show tracking</strong> becomes automatic: Airtable records who confirmed, who cancelled via SMS, and who appeared (future: Priya marks attendance). Monday report computes the no-show rate formally for the first time.</li>
+    <li><strong>Weather cancellations</strong> (currently decided by Marcus by 6 AM): Claude can send a bulk cancellation SMS to the day's roster the moment Marcus posts to #warehouse-ops — no additional manual step. This replaces the current group-text and the wishlist cancellation banner.</li>
+    <li><strong>Age constraint enforcement</strong>: mobile pantry shifts (18+) are flagged in the signup form itself — see updated index.html.</li>
+  </ul>
+</div>
+
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+</body>
+</html>
